@@ -1,0 +1,400 @@
+{
+  "name": "Lead Research + Personalization Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "665e6168-734f-4b45-b393-737868e5a81c",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.company_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "body"
+            }
+          }
+        }
+      },
+      "id": "950fc8ea-3659-4ac5-b88f-4404cd82f4a1",
+      "name": "Fetch Website Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        896,
+        304
+      ],
+      "retryOnFail": false,
+      "alwaysOutputData": false,
+      "notesInFlow": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nlet html = item.json.body || \"\";\n\n// Clean HTML\nhtml = html\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, \"\")\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, \"\")\n  .replace(/<[^>]+>/g, \" \")\n  .replace(/\\s+/g, \" \")\n  .trim()\n  .slice(0, 4000);\n\nreturn {\n  json: {\n    company_name: item.json.company_name,\n    company_url: item.json.company_url,\n    cleaned_text: html\n  }\n};"
+      },
+      "id": "e011596b-2c56-462c-91af-3310397c6087",
+      "name": "Code in JavaScript1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "GPT-4O"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Company Name: {{ $json.company_name }}\nCompany URL: {{ $json.company_url }}\n\nWebsite Content:\n{{ $json.cleaned_text }}\n\nYou are a senior B2B sales intelligence analyst.\n\nAnalyze the company and return ONLY valid JSON.\n\nSTRICT RULES:\n- Return ONLY raw JSON\n- No markdown\n- No explanation\n- No ```json\n- No extra text\n- All fields required\n- outreach_messages must contain exactly 3 messages\n- data_quality_issues must always be an array\n\nRequired JSON structure:\n\n{\n  \"company_name\": \"\",\n  \"company_url\": \"\",\n  \"company_summary\": \"\",\n  \"industry\": \"\",\n  \"company_type\": \"\",\n  \"lead_score\": \"\",\n  \"fit_score\": 0,\n  \"reasoning\": \"\",\n  \"growth_opportunities\": \"\",\n  \"competitors\": \"\",\n  \"subject_line_1\": \"\",\n  \"subject_line_2\": \"\",\n  \"subject_line_3\": \"\",\n  \"outreach_messages\": [\n    \"\",\n    \"\",\n    \"\"\n  ],\n  \"confidence\": \"\",\n  \"data_quality_issues\": []\n}\n\nScoring Rules:\n- Hot = strong fit + high growth + likely buyer\n- Warm = moderate fit\n- Cold = low fit\n\nFit Score:\n- Integer from 1-100\n\nCompany Type Examples:\n- Startup\n- SMB\n- Mid-Market\n- Enterprise\n\nConfidence:\n- low\n- medium\n- high\n\nAnalyze the company deeply:\n- business model\n- ICP\n- marketing maturity\n- likely acquisition channels\n- SEO maturity\n- paid ads potential\n- enterprise readiness\n- AI adoption\n- growth signals\n\nWrite highly personalized outreach messages for a digital marketing / growth agency.\n\nThe outreach should:\n- reference real business context\n- mention likely pain points\n- suggest growth opportunities\n- sound human\n- avoid generic sales language\n\nReturn ONLY valid JSON."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1328,
+        304
+      ],
+      "id": "d336e393-ecad-465a-b332-ef0fd8e279e5",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1CHkw2t0AYs9K1npdJnjxvsdwEJIEP94uYUWBwCM-5q0",
+          "mode": "list",
+          "cachedResultName": "Lead_Gen",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1CHkw2t0AYs9K1npdJnjxvsdwEJIEP94uYUWBwCM-5q0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1CHkw2t0AYs9K1npdJnjxvsdwEJIEP94uYUWBwCM-5q0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "company_summary",
+              "displayName": "company_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "industry",
+              "displayName": "industry",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company_type",
+              "displayName": "company_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lead_score",
+              "displayName": "lead_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fit_score",
+              "displayName": "fit_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reasoning",
+              "displayName": "reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "growth_opportunities",
+              "displayName": "growth_opportunities",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "competitors",
+              "displayName": "competitors",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subject_line_1",
+              "displayName": "subject_line_1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subject_line_2",
+              "displayName": "subject_line_2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subject_line_3",
+              "displayName": "subject_line_3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "outreach_message_1",
+              "displayName": "outreach_message_1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "outreach_message_2",
+              "displayName": "outreach_message_2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "outreach_message_3",
+              "displayName": "outreach_message_3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_quality_issues",
+              "displayName": "data_quality_issues",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1888,
+        304
+      ],
+      "id": "258ba5e5-5645-4a97-b67d-500058ac439b",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2jfDmEa2kZpwDGOr",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n\n  // =========================\n  // EXTRACT AI TEXT\n  // =========================\n\n  let raw = \"\";\n\n  if (\n    item.json.output &&\n    item.json.output[0] &&\n    item.json.output[0].content &&\n    item.json.output[0].content[0] &&\n    item.json.output[0].content[0].text\n  ) {\n    raw = item.json.output[0].content[0].text;\n  } else {\n    return {\n      json: {\n        error: \"No AI text found\"\n      }\n    };\n  }\n\n  // =========================\n  // CLEAN JSON\n  // =========================\n\n  raw = raw\n    .replace(/```json/g, \"\")\n    .replace(/```/g, \"\")\n    .trim();\n\n  // =========================\n  // PARSE JSON\n  // =========================\n\n  let parsed;\n\n  try {\n    parsed = JSON.parse(raw);\n  } catch (err) {\n    return {\n      json: {\n        error: \"JSON Parse Failed\",\n        details: err.message,\n        raw_response: raw\n      }\n    };\n  }\n\n  // =========================\n  // RETURN FINAL STRUCTURE\n  // =========================\n\n  return {\n    json: {\n\n      company_name: parsed.company_name || \"\",\n      company_url: parsed.company_url || \"\",\n      company_summary: parsed.company_summary || \"\",\n      industry: parsed.industry || \"\",\n      company_type: parsed.company_type || \"\",\n      lead_score: parsed.lead_score || \"\",\n      fit_score: parsed.fit_score || 0,\n      reasoning: parsed.reasoning || \"\",\n      growth_opportunities: parsed.growth_opportunities || \"\",\n      competitors: parsed.competitors || \"\",\n\n      subject_line_1: parsed.subject_line_1 || \"\",\n      subject_line_2: parsed.subject_line_2 || \"\",\n      subject_line_3: parsed.subject_line_3 || \"\",\n\n      outreach_message_1:\n        parsed.outreach_messages?.[0] || \"\",\n\n      outreach_message_2:\n        parsed.outreach_messages?.[1] || \"\",\n\n      outreach_message_3:\n        parsed.outreach_messages?.[2] || \"\",\n\n      confidence: parsed.confidence || \"\",\n\n      data_quality_issues:\n        Array.isArray(parsed.data_quality_issues)\n          ? parsed.data_quality_issues.join(\" | \")\n          : \"\"\n\n    }\n  };\n\n});"
+      },
+      "id": "792bb917-a420-4125-8395-be3a96b4a1ec",
+      "name": "Parser_Node",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst companies = [\n  { company_name: \"Notion\",  company_url: \"https://notion.so\" },\n  { company_name: \"HubSpot\", company_url: \"https://hubspot.com\" },\n  { company_name: \"Zapier\",  company_url: \"https://zapier.com\" },\n  { company_name: \"fakecompany123\", company_url: \"https://fakecompany123.com\" }\n];\n\nreturn companies.map(c => ({ json: c }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        304
+      ],
+      "id": "fe70d5a1-bfbd-4cf0-a5cf-d2072a8bf7f9",
+      "name": "Set Node"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Website Content": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parser_Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser_Node": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Node": {
+      "main": [
+        [
+          {
+            "node": "Fetch Website Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1b4be90f-1b33-4702-9f54-b35505dfb4c3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a522f86e332e7d94bea8e2406c039cb2eacf2416dd239705868c6a24d9c90825"
+  },
+  "id": "hkpL0K0GRoyKpuEW",
+  "tags": []
+}
